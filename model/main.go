@@ -108,36 +108,38 @@ func InitDB(envName string) (db *gorm.DB, err error) {
 		if common.UsingMySQL {
 			_, _ = sqlDB.Exec("DROP INDEX idx_channels_key ON channels;") // TODO: delete this line when most users have upgraded
 		}
-		logger.SysLog("database migration started")
-		err = db.AutoMigrate(&Channel{})
-		if err != nil {
-			return nil, err
+		if env.Bool("StartSqlMigration", false) {
+			logger.SysLog("database migration started")
+			err = db.AutoMigrate(&Channel{})
+			if err != nil {
+				return nil, err
+			}
+			err = db.AutoMigrate(&Token{})
+			if err != nil {
+				return nil, err
+			}
+			err = db.AutoMigrate(&User{})
+			if err != nil {
+				return nil, err
+			}
+			err = db.AutoMigrate(&Option{})
+			if err != nil {
+				return nil, err
+			}
+			err = db.AutoMigrate(&Redemption{})
+			if err != nil {
+				return nil, err
+			}
+			err = db.AutoMigrate(&Ability{})
+			if err != nil {
+				return nil, err
+			}
+			err = db.AutoMigrate(&Log{})
+			if err != nil {
+				return nil, err
+			}
+			logger.SysLog("database migrated")
 		}
-		err = db.AutoMigrate(&Token{})
-		if err != nil {
-			return nil, err
-		}
-		err = db.AutoMigrate(&User{})
-		if err != nil {
-			return nil, err
-		}
-		err = db.AutoMigrate(&Option{})
-		if err != nil {
-			return nil, err
-		}
-		err = db.AutoMigrate(&Redemption{})
-		if err != nil {
-			return nil, err
-		}
-		err = db.AutoMigrate(&Ability{})
-		if err != nil {
-			return nil, err
-		}
-		err = db.AutoMigrate(&Log{})
-		if err != nil {
-			return nil, err
-		}
-		logger.SysLog("database migrated")
 		return db, err
 	} else {
 		logger.FatalLog(err)
