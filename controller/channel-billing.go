@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/songquanpeng/one-api/common"
-	"github.com/songquanpeng/one-api/common/config"
-	"github.com/songquanpeng/one-api/common/logger"
-	"github.com/songquanpeng/one-api/model"
-	"github.com/songquanpeng/one-api/monitor"
-	"github.com/songquanpeng/one-api/relay/util"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/songquanpeng/one-api/common/client"
+	"github.com/songquanpeng/one-api/common/config"
+	"github.com/songquanpeng/one-api/common/logger"
+	"github.com/songquanpeng/one-api/model"
+	"github.com/songquanpeng/one-api/monitor"
+	"github.com/songquanpeng/one-api/relay/channeltype"
 
 	"github.com/gin-gonic/gin"
 )
@@ -81,6 +82,36 @@ type APGC2DGPTUsageResponse struct {
 	TotalUsed      float64 `json:"total_used"`
 }
 
+type SiliconFlowUsageResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Status  bool   `json:"status"`
+	Data    struct {
+		ID            string `json:"id"`
+		Name          string `json:"name"`
+		Image         string `json:"image"`
+		Email         string `json:"email"`
+		IsAdmin       bool   `json:"isAdmin"`
+		Balance       string `json:"balance"`
+		Status        string `json:"status"`
+		Introduction  string `json:"introduction"`
+		Role          string `json:"role"`
+		ChargeBalance string `json:"chargeBalance"`
+		TotalBalance  string `json:"totalBalance"`
+		Category      string `json:"category"`
+	} `json:"data"`
+}
+
+type DeepSeekUsageResponse struct {
+	IsAvailable  bool `json:"is_available"`
+	BalanceInfos []struct {
+		Currency        string `json:"currency"`
+		TotalBalance    string `json:"total_balance"`
+		GrantedBalance  string `json:"granted_balance"`
+		ToppedUpBalance string `json:"topped_up_balance"`
+	} `json:"balance_infos"`
+}
+
 // GetAuthHeader get auth header
 func GetAuthHeader(token string) http.Header {
 	h := http.Header{}
@@ -96,7 +127,7 @@ func GetResponseBody(method, url string, channel *model.Channel, headers http.He
 	for k := range headers {
 		req.Header.Add(k, headers.Get(k))
 	}
-	res, err := util.HTTPClient.Do(req)
+	res, err := client.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -203,30 +234,85 @@ func updateChannelAIGC2DBalance(channel *model.Channel) (float64, error) {
 	return response.TotalAvailable, nil
 }
 
+func updateChannelSiliconFlowBalance(channel *model.Channel) (float64, error) {
+	url := "https://api.siliconflow.cn/v1/user/info"
+	body, err := GetResponseBody("GET", url, channel, GetAuthHeader(channel.Key))
+	if err != nil {
+		return 0, err
+	}
+	response := SiliconFlowUsageResponse{}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return 0, err
+	}
+	if response.Code != 20000 {
+		return 0, fmt.Errorf("code: %d, message: %s", response.Code, response.Message)
+	}
+	balance, err := strconv.ParseFloat(response.Data.TotalBalance, 64)
+	if err != nil {
+		return 0, err
+	}
+	channel.UpdateBalance(balance)
+	return balance, nil
+}
+
+func updateChannelDeepSeekBalance(channel *model.Channel) (float64, error) {
+	url := "https://api.deepseek.com/user/balance"
+	body, err := GetResponseBody("GET", url, channel, GetAuthHeader(channel.Key))
+	if err != nil {
+		return 0, err
+	}
+	response := DeepSeekUsageResponse{}
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return 0, err
+	}
+	index := -1
+	for i, balanceInfo := range response.BalanceInfos {
+		if balanceInfo.Currency == "CNY" {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return 0, errors.New("currency CNY not found")
+	}
+	balance, err := strconv.ParseFloat(response.BalanceInfos[index].TotalBalance, 64)
+	if err != nil {
+		return 0, err
+	}
+	channel.UpdateBalance(balance)
+	return balance, nil
+}
+
 func updateChannelBalance(channel *model.Channel) (float64, error) {
-	baseURL := common.ChannelBaseURLs[channel.Type]
+	baseURL := channeltype.ChannelBaseURLs[channel.Type]
 	if channel.GetBaseURL() == "" {
 		channel.BaseURL = &baseURL
 	}
 	switch channel.Type {
-	case common.ChannelTypeOpenAI:
+	case channeltype.OpenAI:
 		if channel.GetBaseURL() != "" {
 			baseURL = channel.GetBaseURL()
 		}
-	case common.ChannelTypeAzure:
+	case channeltype.Azure:
 		return 0, errors.New("尚未实现")
-	case common.ChannelTypeCustom:
+	case channeltype.Custom:
 		baseURL = channel.GetBaseURL()
-	case common.ChannelTypeCloseAI:
+	case channeltype.CloseAI:
 		return updateChannelCloseAIBalance(channel)
-	case common.ChannelTypeOpenAISB:
+	case channeltype.OpenAISB:
 		return updateChannelOpenAISBBalance(channel)
-	case common.ChannelTypeAIProxy:
+	case channeltype.AIProxy:
 		return updateChannelAIProxyBalance(channel)
-	case common.ChannelTypeAPI2GPT:
+	case channeltype.API2GPT:
 		return updateChannelAPI2GPTBalance(channel)
-	case common.ChannelTypeAIGC2D:
+	case channeltype.AIGC2D:
 		return updateChannelAIGC2DBalance(channel)
+	case channeltype.SiliconFlow:
+		return updateChannelSiliconFlowBalance(channel)
+	case channeltype.DeepSeek:
+		return updateChannelDeepSeekBalance(channel)
 	default:
 		return 0, errors.New("尚未实现")
 	}
@@ -301,11 +387,11 @@ func updateAllChannelsBalance() error {
 		return err
 	}
 	for _, channel := range channels {
-		if channel.Status != common.ChannelStatusEnabled {
+		if channel.Status != model.ChannelStatusEnabled {
 			continue
 		}
 		// TODO: support Azure
-		if channel.Type != common.ChannelTypeOpenAI && channel.Type != common.ChannelTypeCustom {
+		if channel.Type != channeltype.OpenAI && channel.Type != channeltype.Custom {
 			continue
 		}
 		balance, err := updateChannelBalance(channel)
