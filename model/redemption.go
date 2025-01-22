@@ -17,7 +17,7 @@ const (
 type Redemption struct {
 	Id           int    `json:"id"`
 	UserId       int    `json:"user_id"`
-	Key          string `json:"key" gorm:"type:char(32);uniqueIndex"`
+	Key          string `json:"key" gorm:"type:char(32)"`
 	Status       int    `json:"status" gorm:"default:1"`
 	Name         string `json:"name" gorm:"index"`
 	Quota        int64  `json:"quota" gorm:"bigint;default:100"`

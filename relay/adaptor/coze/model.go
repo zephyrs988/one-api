@@ -36,3 +36,45 @@ type StreamResponse struct {
 	ConversationId   string            `json:"conversation_id,omitempty"`
 	ErrorInformation *ErrorInformation `json:"error_information,omitempty"`
 }
+
+type V3StreamResponse struct {
+	Id             string `json:"id"`
+	ConversationId string `json:"conversation_id"`
+	BotId          string `json:"bot_id"`
+	Role           string `json:"role"`
+	Type           string `json:"type"`
+	Content        string `json:"content"`
+	ContentType    string `json:"content_type"`
+	ChatId         string `json:"chat_id"`
+	CreatedAt      int    `json:"created_at"`
+	CompletedAt    int    `json:"completed_at"`
+	LastError      struct {
+		Code int    `json:"code"`
+		Msg  string `json:"msg"`
+	} `json:"last_error"`
+	Status string `json:"status"`
+	Usage  struct {
+		TokenCount  int `json:"token_count"`
+		OutputCount int `json:"output_count"`
+		InputCount  int `json:"input_count"`
+	} `json:"usage"`
+	SectionId string `json:"section_id"`
+}
+
+type V3Response struct {
+	Data struct {
+		Id             string `json:"id"`
+		ConversationId string `json:"conversation_id"`
+		BotId          string `json:"bot_id"`
+		Content        string `json:"content"`
+		ContentType    string `json:"content_type"`
+		CreatedAt      int    `json:"created_at"`
+		LastError      struct {
+			Code int    `json:"code"`
+			Msg  string `json:"msg"`
+		} `json:"last_error"`
+		Status string `json:"status"`
+	} `json:"data"`
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+}
