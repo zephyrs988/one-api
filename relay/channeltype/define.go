@@ -48,5 +48,6 @@ const (
 	SiliconFlow
 	XAI
 	Replicate
+	CozeV3
 	Dummy
 )

@@ -48,6 +48,7 @@ var ChannelBaseURLs = []string{
 	"https://api.siliconflow.cn",                // 44
 	"https://api.x.ai",                          // 45
 	"https://api.replicate.com/v1/models/",      // 46
+	"https://api.coze.cn",                       // 47
 }
 
 func init() {

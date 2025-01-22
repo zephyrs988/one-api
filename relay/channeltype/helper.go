@@ -29,6 +29,8 @@ func ToAPIType(channelType int) int {
 		apiType = apitype.AwsClaude
 	case Coze:
 		apiType = apitype.Coze
+	case CozeV3:
+		apiType = apitype.CozeV3
 	case Cohere:
 		apiType = apitype.Cohere
 	case Cloudflare:
