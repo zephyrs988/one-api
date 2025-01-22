@@ -35,7 +35,7 @@ func (a *AdaptorV3) ConvertRequest(c *gin.Context, relayMode int, request *model
 		return nil, errors.New("request is nil")
 	}
 	request.User = a.meta.Config.UserID
-	return ConvertRequest(*request), nil
+	return V3ConvertRequest(*request), nil
 }
 
 func (a *AdaptorV3) ConvertImageRequest(request *model.ImageRequest) (any, error) {

@@ -44,14 +44,40 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *Request {
 	}
 	for i, message := range textRequest.Messages {
 		if i == len(textRequest.Messages)-1 {
-			cozeRequest.Query = message.CozeV3StringContent()
+			cozeRequest.Query = message.StringContent()
+			continue
+		}
+		cozeMessage := Message{
+			Role:    message.Role,
+			Content: message.StringContent(),
+		}
+		cozeRequest.ChatHistory = append(cozeRequest.ChatHistory, cozeMessage)
+	}
+	return &cozeRequest
+}
+
+func V3ConvertRequest(textRequest model.GeneralOpenAIRequest) *V3Request {
+	cozeRequest := V3Request{
+		UserId: textRequest.User,
+		Stream: textRequest.Stream,
+		BotId:  strings.TrimPrefix(textRequest.Model, "bot-"),
+	}
+	if cozeRequest.UserId == "" {
+		cozeRequest.UserId = "any"
+	}
+	for i, message := range textRequest.Messages {
+		if i == len(textRequest.Messages)-1 {
+			cozeRequest.AdditionalMessages = append(cozeRequest.AdditionalMessages, Message{
+				Role:    "user",
+				Content: message.CozeV3StringContent(),
+			})
 			continue
 		}
 		cozeMessage := Message{
 			Role:    message.Role,
 			Content: message.CozeV3StringContent(),
 		}
-		cozeRequest.ChatHistory = append(cozeRequest.ChatHistory, cozeMessage)
+		cozeRequest.AdditionalMessages = append(cozeRequest.AdditionalMessages, cozeMessage)
 	}
 	return &cozeRequest
 }
@@ -217,7 +243,7 @@ func V3StreamHandler(c *gin.Context, resp *http.Response) (*model.ErrorWithStatu
 		if len(parts) != 2 {
 			continue
 		}
-		if strings.HasPrefix(parts[0], "event:") && strings.HasPrefix(parts[1], "data:") {
+		if !strings.HasPrefix(parts[0], "event:") || !strings.HasPrefix(parts[1], "data:") {
 			continue
 		}
 		event, data := strings.TrimSpace(parts[0][6:]), strings.TrimSpace(parts[1][5:])

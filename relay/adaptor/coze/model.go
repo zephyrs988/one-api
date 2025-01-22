@@ -2,9 +2,9 @@ package coze
 
 type Message struct {
 	Role        string `json:"role"`
-	Type        string `json:"type"`
+	Type        string `json:"type,omitempty"`
 	Content     string `json:"content"`
-	ContentType string `json:"content_type"`
+	ContentType string `json:"content_type,omitempty"`
 }
 
 type ErrorInformation struct {
@@ -77,4 +77,11 @@ type V3Response struct {
 	} `json:"data"`
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
+}
+
+type V3Request struct {
+	BotId              string    `json:"bot_id"`
+	UserId             string    `json:"user_id"`
+	AdditionalMessages []Message `json:"additional_messages"`
+	Stream             bool      `json:"stream"`
 }
