@@ -206,7 +206,7 @@ const typeConfig = {
     },
     modelGroup: 'Coze'
   },
-  47: {
+  52: {
     inputLabel: {
       config: {
         user_id: 'User ID'

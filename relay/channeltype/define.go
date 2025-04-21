@@ -48,6 +48,11 @@ const (
 	SiliconFlow
 	XAI
 	Replicate
+	BaiduV2
+	XunfeiV2
+	AliBailian
+	OpenAICompatible
+	GeminiOpenAICompatible
 	CozeV3
 	Dummy
 )

@@ -48,7 +48,13 @@ var ChannelBaseURLs = []string{
 	"https://api.siliconflow.cn",                // 44
 	"https://api.x.ai",                          // 45
 	"https://api.replicate.com/v1/models/",      // 46
-	"https://api.coze.cn",                       // 47
+	"https://qianfan.baidubce.com",              // 47
+	"https://spark-api-open.xf-yun.com",         // 48
+	"https://dashscope.aliyuncs.com",            // 49
+	"",                                          // 50
+
+	"https://generativelanguage.googleapis.com/v1beta/openai/", // 51
+	"https://api.coze.cn", // 52
 }
 
 func init() {
