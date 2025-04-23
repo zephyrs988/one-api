@@ -27,6 +27,7 @@ var modelRatioLock sync.RWMutex
 var ModelRatio = map[string]float64{
 	// https://openai.com/pricing
 	"gpt-4":                   15,
+	"gpt-4.1":                 15,
 	"gpt-4-0314":              15,
 	"gpt-4-0613":              15,
 	"gpt-4-32k":               30,
