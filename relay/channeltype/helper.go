@@ -23,6 +23,8 @@ func ToAPIType(channelType int) int {
 		apiType = apitype.Tencent
 	case Gemini:
 		apiType = apitype.Gemini
+	case GeminiOpenAICompatible:
+		apiType = apitype.Gemini
 	case Ollama:
 		apiType = apitype.Ollama
 	case AwsClaude:
