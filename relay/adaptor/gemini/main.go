@@ -66,6 +66,23 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *ChatRequest {
 			MaxOutputTokens: textRequest.MaxTokens,
 		},
 	}
+
+	if textRequest.ReasoningEffort != nil {
+		var thinkBudget int
+		switch *textRequest.ReasoningEffort {
+		case "low":
+			thinkBudget = 1000
+		case "medium":
+			thinkBudget = 8000
+		case "high":
+			thinkBudget = 24000
+		}
+		geminiRequest.GenerationConfig.ThinkingConfig = &ThinkingConfig{
+			ThinkingBudget:  thinkBudget,
+			IncludeThoughts: true,
+		}
+	}
+
 	if textRequest.ResponseFormat != nil {
 		if mimeType, ok := mimeTypeMap[textRequest.ResponseFormat.Type]; ok {
 			geminiRequest.GenerationConfig.ResponseMimeType = mimeType
@@ -199,6 +216,21 @@ func (g *ChatResponse) GetResponseText() string {
 	return ""
 }
 
+func (g *ChatResponse) GetResponseTextAndThought() (content string, thought string) {
+	if g == nil {
+		return
+	}
+	if len(g.Candidates) > 0 && len(g.Candidates[0].Content.Parts) > 0 {
+		contentPart := g.Candidates[0].Content.Parts[0]
+		if contentPart.Thought {
+			thought = contentPart.Text
+			return
+		}
+		content = contentPart.Text
+	}
+	return
+}
+
 type ChatCandidate struct {
 	Content       ChatContent        `json:"content"`
 	FinishReason  string             `json:"finishReason"`
@@ -263,7 +295,11 @@ func responseGeminiChat2OpenAI(response *ChatResponse) *openai.TextResponse {
 					if i > 0 {
 						builder.WriteString("\n")
 					}
-					builder.WriteString(part.Text)
+					if part.Thought {
+						builder.WriteString(fmt.Sprintf("<think>%s</think>\n", part.Text))
+					} else {
+						builder.WriteString(part.Text)
+					}
 				}
 				choice.Message.Content = builder.String()
 			}
@@ -278,7 +314,7 @@ func responseGeminiChat2OpenAI(response *ChatResponse) *openai.TextResponse {
 
 func streamResponseGeminiChat2OpenAI(geminiResponse *ChatResponse) *openai.ChatCompletionsStreamResponse {
 	var choice openai.ChatCompletionsStreamResponseChoice
-	choice.Delta.Content = geminiResponse.GetResponseText()
+	choice.Delta.Content, choice.Delta.ReasoningContent = geminiResponse.GetResponseTextAndThought()
 	//choice.FinishReason = &constant.StopFinishReason
 	var response openai.ChatCompletionsStreamResponse
 	response.Id = fmt.Sprintf("chatcmpl-%s", random.GetUUID())
