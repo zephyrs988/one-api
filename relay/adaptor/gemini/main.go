@@ -93,22 +93,13 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *ChatRequest {
 		}
 	}
 	if textRequest.Tools != nil {
-		functions := make([]model.Function, 0, len(textRequest.Tools))
-		for _, tool := range textRequest.Tools {
-			functions = append(functions, tool.Function)
-		}
-		geminiRequest.Tools = []ChatTools{
-			{
-				FunctionDeclarations: functions,
-			},
-		}
-	} else if textRequest.Functions != nil {
-		geminiRequest.Tools = []ChatTools{
-			{
-				FunctionDeclarations: textRequest.Functions,
-			},
-		}
+		geminiRequest.Tools = textRequest.Tools
 	}
+
+	if textRequest.Functions != nil {
+		geminiRequest.Tools = textRequest.Functions
+	}
+
 	shouldAddDummyModelMessage := false
 	for _, message := range textRequest.Messages {
 		content := ChatContent{
