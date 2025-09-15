@@ -121,6 +121,15 @@ func (m Message) ParseContent() []MessageContent {
 						},
 					})
 				}
+			case ContentTypeInputFile:
+				if subObj, ok := contentMap["file"].(map[string]any); ok {
+					contentList = append(contentList, MessageContent{
+						Type: ContentTypeInputFile,
+						File: &File{
+							FileData: subObj["file_data"].(string),
+						},
+					})
+				}
 			}
 		}
 		return contentList
@@ -137,4 +146,10 @@ type MessageContent struct {
 	Type     string    `json:"type,omitempty"`
 	Text     string    `json:"text"`
 	ImageURL *ImageURL `json:"image_url,omitempty"`
+	File     *File     `json:"file,omitempty"`
+}
+
+type File struct {
+	FileData string `json:"file_data,omitempty"`
+	FileName string `json:"filename,omitempty"`
 }

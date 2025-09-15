@@ -4,5 +4,5 @@ const (
 	ContentTypeText       = "text"
 	ContentTypeImageURL   = "image_url"
 	ContentTypeInputAudio = "input_audio"
-	ContentTypeInputPdf   = "application/pdf"
+	ContentTypeInputFile  = "file"
 )

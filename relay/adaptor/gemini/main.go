@@ -12,6 +12,7 @@ import (
 
 	"github.com/songquanpeng/one-api/common"
 	"github.com/songquanpeng/one-api/common/config"
+	"github.com/songquanpeng/one-api/common/file"
 	"github.com/songquanpeng/one-api/common/helper"
 	"github.com/songquanpeng/one-api/common/image"
 	"github.com/songquanpeng/one-api/common/logger"
@@ -118,11 +119,12 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *ChatRequest {
 				parts = append(parts, Part{
 					Text: part.Text,
 				})
-			} else if part.Type == model.ContentTypeInputPdf {
+			} else if part.Type == model.ContentTypeInputFile {
+				mimeType, data, _ := file.GetFileFromUrl(part.File.FileData)
 				parts = append(parts, Part{
-					FileData: &FileData{
-						MimeType: "application/pdf",
-						FileUri:  part.ImageURL.Url,
+					InlineData: &InlineData{
+						MimeType: mimeType,
+						Data:     data,
 					},
 				})
 			} else if part.Type == model.ContentTypeImageURL {
