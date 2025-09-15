@@ -118,6 +118,13 @@ func ConvertRequest(textRequest model.GeneralOpenAIRequest) *ChatRequest {
 				parts = append(parts, Part{
 					Text: part.Text,
 				})
+			} else if part.Type == model.ContentTypeInputPdf {
+				parts = append(parts, Part{
+					FileData: &FileData{
+						MimeType: "application/pdf",
+						FileUri:  part.ImageURL.Url,
+					},
+				})
 			} else if part.Type == model.ContentTypeImageURL {
 				imageNum += 1
 				if imageNum > VisionMaxImageNum {

@@ -40,6 +40,11 @@ type InlineData struct {
 	Data     string `json:"data"`
 }
 
+type FileData struct {
+	MimeType string `json:"mime_type"`
+	FileUri  string `json:"file_uri"`
+}
+
 type FunctionCall struct {
 	FunctionName string `json:"name"`
 	Arguments    any    `json:"args"`
@@ -50,6 +55,7 @@ type Part struct {
 	InlineData   *InlineData   `json:"inlineData,omitempty"`
 	FunctionCall *FunctionCall `json:"functionCall,omitempty"`
 	Thought      bool          `json:"thought,omitempty"`
+	FileData     *FileData     `json:"fileData,omitempty"`
 }
 
 type ChatContent struct {
