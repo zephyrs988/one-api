@@ -4,10 +4,9 @@ WORKDIR /web
 COPY ./VERSION .
 COPY ./web .
 
-# 确保使用 package-lock.json 安装，避免依赖版本漂移
-RUN npm ci --prefix /web/default && \
-    npm ci --prefix /web/berry && \
-    npm ci --prefix /web/air
+RUN npm install ajv@^6 ajv-keywords@^3 --legacy-peer-deps --prefix /web/default && \
+    npm install ajv@^6 ajv-keywords@^3 --legacy-peer-deps --prefix /web/berry && \
+    npm install ajv@^6 ajv-keywords@^3 --legacy-peer-deps --prefix /web/air
 
 RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/default && \
     DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/berry && \
