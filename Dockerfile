@@ -4,13 +4,17 @@ WORKDIR /web
 COPY ./VERSION .
 COPY ./web .
 
-RUN npm install ajv@^6 ajv-keywords@^3 --legacy-peer-deps --prefix /web/default && \
-    npm install ajv@^6 ajv-keywords@^3 --legacy-peer-deps --prefix /web/berry && \
-    npm install ajv@^6 ajv-keywords@^3 --legacy-peer-deps --prefix /web/air
+WORKDIR /web/default
+RUN npm install --force
+RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat VERSION) npm run build
 
-RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/default && \
-    DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/berry && \
-    DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/air
+WORKDIR /web/berry
+RUN npm install --force
+RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat VERSION) npm run build
+
+WORKDIR /web/air
+RUN npm install --force
+RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat VERSION) npm run build
 
 FROM golang:alpine AS builder2
 
