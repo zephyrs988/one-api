@@ -8,6 +8,11 @@ RUN npm install --legacy-peer-deps --prefix /web/default
 RUN npm install --legacy-peer-deps --prefix /web/berry
 RUN npm install --legacy-peer-deps --prefix /web/air
 
+# 清理并重新安装所有目录的依赖以确保 ajv 问题解决
+RUN cd /web/default && rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
+RUN cd /web/berry && rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
+RUN cd /web/air && rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
+
 RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/default
 RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/berry
 RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/air
