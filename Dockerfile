@@ -4,18 +4,18 @@ WORKDIR /web
 COPY ./VERSION .
 COPY ./web .
 
-RUN npm install --legacy-peer-deps --prefix /web/default
-RUN npm install --legacy-peer-deps --prefix /web/berry
-RUN npm install --legacy-peer-deps --prefix /web/air
+# 设置 Node.js 内存限制
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 
-# 清理并重新安装所有目录的依赖以确保 ajv 问题解决
-RUN cd /web/default && rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
-RUN cd /web/berry && rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
-RUN cd /web/air && rm -rf node_modules package-lock.json && npm install --legacy-peer-deps
+# 分别安装每个目录的依赖，并在安装后清理缓存以节省内存
+RUN cd /web/default && npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline && npm cache clean --force
+RUN cd /web/berry && npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline && npm cache clean --force  
+RUN cd /web/air && npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline && npm cache clean --force
 
-RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/default
-RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/berry
-RUN DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build --prefix /web/air
+# 分别构建每个项目，构建后立即清理 node_modules 以节省空间
+RUN cd /web/default && DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build && rm -rf node_modules
+RUN cd /web/berry && DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build && rm -rf node_modules
+RUN cd /web/air && DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build && rm -rf node_modules
 
 
 FROM golang:alpine AS builder2
