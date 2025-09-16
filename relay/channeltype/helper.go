@@ -13,7 +13,7 @@ func ToAPIType(channelType int) int {
 		apiType = apitype.PaLM
 	case Zhipu:
 		apiType = apitype.Zhipu
-	case Ali:
+	case Ali, AliBailian:
 		apiType = apitype.Ali
 	case Xunfei:
 		apiType = apitype.Xunfei

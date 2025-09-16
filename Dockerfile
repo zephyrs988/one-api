@@ -4,18 +4,30 @@ WORKDIR /web
 COPY ./VERSION .
 COPY ./web .
 
-# 设置 Node.js 内存限制
-ENV NODE_OPTIONS="--max-old-space-size=2048"
+# 设置 Node.js 内存限制和垃圾回收优化
+ENV NODE_OPTIONS="--max-old-space-size=1536 --gc-interval=100"
 
-# 分别安装每个目录的依赖，并在安装后清理缓存以节省内存
-RUN cd /web/default && npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline && npm cache clean --force
-RUN cd /web/berry && npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline && npm cache clean --force  
-RUN cd /web/air && npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline && npm cache clean --force
+# 分别安装和构建每个目录，使用更激进的内存管理
+RUN cd /web/default && \
+    npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline && \
+    npm cache clean --force && \
+    DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat /web/VERSION) npm run build && \
+    rm -rf node_modules && \
+    npm cache clean --force
 
-# 分别构建每个项目，构建后立即清理 node_modules 以节省空间
-RUN cd /web/default && DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build && rm -rf node_modules
-RUN cd /web/berry && DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build && rm -rf node_modules
-RUN cd /web/air && DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat ./VERSION) npm run build && rm -rf node_modules
+RUN cd /web/berry && \
+    npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline && \
+    npm cache clean --force && \
+    DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat /web/VERSION) npm run build && \
+    rm -rf node_modules && \
+    npm cache clean --force
+
+RUN cd /web/air && \
+    npm install --legacy-peer-deps --no-audit --no-fund --prefer-offline && \
+    npm cache clean --force && \
+    DISABLE_ESLINT_PLUGIN='true' REACT_APP_VERSION=$(cat /web/VERSION) npm run build && \
+    rm -rf node_modules && \
+    npm cache clean --force
 
 
 FROM golang:alpine AS builder2
