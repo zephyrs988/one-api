@@ -4,8 +4,8 @@ WORKDIR /web
 COPY ./VERSION .
 COPY ./web .
 
-# 设置 Node.js 内存限制和垃圾回收优化
-ENV NODE_OPTIONS="--max-old-space-size=1536 --gc-interval=100"
+# 设置 Node.js 内存限制
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 
 # 分别安装和构建每个目录，使用更激进的内存管理
 RUN cd /web/default && \
